@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ChakraProvider,
   Box,
@@ -8,11 +8,19 @@ import {
   Code,
   Grid,
   theme,
+  Heading,
 } from '@chakra-ui/react';
 import { ColorModeSwitcher } from './ColorModeSwitcher';
 import { Logo } from './Logo';
 
 function App() {
+
+  const [data, setData] = useState();
+
+  useEffect(() => {
+    fetch('/api').then((res) => res.json()).then((data) => setData(data.message));
+  }, []);
+
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize="xl">
@@ -32,6 +40,7 @@ function App() {
             >
               Learn Chakra
             </Link>
+            <Heading>{!data ? "Loading...." : data}</Heading>
           </VStack>
         </Grid>
       </Box>
