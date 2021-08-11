@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/joshdelg/goldeneagle#readme",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "express": "^4.17.1",
+    "got": "^11.8.2",
     "nodemon": "^2.0.12"
   }
 }

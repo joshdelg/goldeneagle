@@ -20,7 +20,8 @@ function Predict(props) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                athleteUrl: athleteUrl
+                athleteUrl: athleteUrl,
+                year: year
             })
         }).then(res => res.json()).then(data => console.log(data)).catch((err) => console.error(err));
     }
