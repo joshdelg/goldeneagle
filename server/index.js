@@ -71,6 +71,10 @@ app.post("/api/getAthleteData", (req, res) => {
 
         // Get athlete school id, school name, and grade during the selected year
         const timesHeader = $(`div[id*="S-${year}"]`).children().first();
+        if(timesHeader.length === 0) {
+            res.status(500).json({err: "No athlete data could be found for that year. Try a different year."});
+            return;
+        }
         athleteData.schoolName = $('small a', timesHeader).text();
         athleteData.schoolId = $('small a', timesHeader).attr().href.split('?')[1].substring(9);
         athleteData.gradeYear = parseInt($('small span', timesHeader).text().match(/[0-9]+/g)[0]);
@@ -121,7 +125,8 @@ app.post("/api/getAthleteData", (req, res) => {
 
         res.json(athleteData);
     }).catch((err) => {
-        res.status(500).json({msg: "An error occured"});
+        console.log(err);
+        res.status(500).json({err: "An error occured, please try a different link"});
         return;
     })
 
@@ -159,7 +164,10 @@ app.post("/api/getMeetData", async (req, res) => {
         });
 
         res.json(meetData);
-    }).catch((err) => console.log(err));
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({err: "An error occured. Please try a different link."});
+    });
 
 
 
