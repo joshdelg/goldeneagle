@@ -176,6 +176,18 @@ app.post("/api/getMeetData", async (req, res) => {
     // ! And whatever else is needed to make the regression line
 });
 
+app.get("/api/getSchoolAthletes", async(req, res) => {
+    const schoolUrl = "https://www.athletic.net/CrossCountry/seasonbest?SchoolID=408&S=2020";
+
+    const response = await got(schoolUrl);
+    const $ = cheerio.load(response.body);
+    $('div.distance h3').each((i, el) => {
+        if($(el).text().includes("5,000 Meters")) {
+            console.log($(el).next().text());
+        }
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
 });

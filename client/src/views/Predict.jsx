@@ -16,6 +16,8 @@ function Predict(props) {
 
     const [isLoading, setIsLoading] = useState(false);
 
+    const [schoolUrl, setSchoolUrl] = useState();
+
     const onSelectAthlete = (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -94,6 +96,12 @@ function Predict(props) {
         return {srs: srs, avgDrop: avgDrop};
     }
 
+    const onSubmitSchool = (e) => {
+        e.preventDefault();
+
+        // Request to get athelte list
+    }
+
     // ! TODO Check if meet and athlete links are in right form with regular expression!
 
     return (
@@ -117,6 +125,14 @@ function Predict(props) {
                         </Select>
                     </Box>
                     <Button onClick={onSelectAthlete} disabled={isLoading}>Select</Button>
+                </Box>
+                <Heading>Select athlete by school</Heading>
+                <Box>
+                    <Box>
+                        <Text>School</Text>
+                        <Input placeholder="Paste school athletic.net url" type="text" value={schoolUrl} onChange={(e) => setSchoolUrl(e.target.value)} />
+                        <Button onClick={onSubmitSchool}></Button>
+                    </Box>
                 </Box>
                 {/** // ! Better organization for this and a loading component please */}
                 {(!athleteData && isLoading) && (
