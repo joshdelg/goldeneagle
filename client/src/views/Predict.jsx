@@ -1,12 +1,18 @@
-import { Box, Heading, Stack, Button, Input, Select, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from "@chakra-ui/react";
+import { Box, Heading, Stack, Button, Input, Select, Text, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Grid, GridItem, Flex } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { secondsToString, stringToSeconds } from "../lib/timeLibs";
 import regression from 'regression';
 
 function Predict(props) {
 
+    const athleteUrlPrefix = 'https://www.athletic.net/CrossCountry/Athlete.aspx?AID=';
+
+    const [athleteSelectMode, setAthleteSelectMode] = useState('School');
+
     const [athleteData, setAthleteData] = useState(); // !in addition, SR, avg time that season/thus far, team ranking?, all time PR?
     const [meetData, setMeetData] = useState(); // !in addition, avg time drop/team time drop/num PRs after computation though in new dataset
+
+    const [athleteId, setAthleteId] = useState();
 
     const [athleteUrl, setAthleteUrl] = useState("");
     const [meetUrl, setMeetUrl] = useState("");
@@ -16,7 +22,8 @@ function Predict(props) {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const [schoolUrl, setSchoolUrl] = useState();
+    const [schoolUrl, setSchoolUrl] = useState("");
+    const [schoolAthletes, setSchoolAthletes] = useState();
 
     const onSelectAthlete = (e) => {
         e.preventDefault();
@@ -50,7 +57,6 @@ function Predict(props) {
         e.preventDefault();
         setIsLoading(true);
 
-        console.log("Selected course: " + meetUrl);
         fetch("/api/getMeetData", {
             method: 'POST',
             headers: {
@@ -100,6 +106,44 @@ function Predict(props) {
         e.preventDefault();
 
         // Request to get athelte list
+        setIsLoading(true);
+        fetch('/api/getSchoolAthletes', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(res => res.json()).then(data => setSchoolAthletes(data.athleteList));
+        setIsLoading(false);
+    }
+
+    const selectSchoolAthlete = (e) => {
+        e.preventDefault();
+
+        setAthleteUrl(athleteUrlPrefix + athleteId);
+        setIsLoading(true);
+
+        // ! can make lib to automatically add content header?
+        fetch("/api/getAthleteData", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                athleteUrl: athleteUrlPrefix + athleteId,
+                year: year
+            })
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            if(data.err) {
+                alert(data.err);
+            }
+            setAthleteData(data);
+            setIsLoading(false);
+        }).catch((err) => {
+            console.error(err);
+            setIsLoading(false);
+        });
     }
 
     // ! TODO Check if meet and athlete links are in right form with regular expression!
@@ -107,7 +151,71 @@ function Predict(props) {
     return (
         <Box py="15vh">
             <Heading>Predict an Athlete</Heading>
-            <Stack my={8} mx={8}>
+            <Box bg="teal" m={4}>
+                <Grid templateColumns="repeat(2, 1fr)" gap={8}>
+                    <Box bg="red" p={2}>
+                        <Heading>Select an athlete</Heading>
+                        <Box>
+                            <Box my={4}>
+                                <Text my={2}>Find athlete by</Text>
+                                <Select value={athleteSelectMode} onChange={(e) => setAthleteSelectMode(e.target.value)}>
+                                    <option value={"School"}>School</option>
+                                    <option value={"URL"}>URL</option>
+                                </Select>
+                            </Box>
+                            <Box my={4}>
+                                <Text my={2}>Choose a year</Text>
+                                <Select placeholder="Select year" value={year} onChange={(e) => setYear(e.target.value)}>
+                                    {
+                                        ["2018", "2019", "2020", "2021"].map((val, index) => (
+                                            <option key={index} value={val}>{val}</option>
+                                        ))
+                                    }
+                                </Select>
+                            </Box>
+                            {(athleteSelectMode === "School") ? (
+                                <>
+                                    <Box my={4}>
+                                        <Text my={2}>Paste school url</Text>
+                                        <Flex>
+                                            <Input type="text" value={schoolUrl} onChange={(e) => setSchoolUrl(e.target.value)} placeholder="https://www.athletic.net/CrossCountry/School.aspx?SchoolID=408" />
+                                            <Button mx={2} onClick={onSubmitSchool} disabled={isLoading || !schoolUrl}>Select School</Button>
+                                        </Flex>
+                                    </Box>
+                                    <Box my={4}>
+                                        <Text my={2}>
+                                            Select an athlete
+                                        </Text>
+                                        <Flex>
+                                            <Select placeholder="Select a school first" value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
+                                                {
+                                                    schoolAthletes && schoolAthletes.map((ath, index) => (<option key={index} value={ath.athleteId}>{ath.name}</option>))
+                                                }
+                                            </Select>
+                                            <Button mx={2} onClick={selectSchoolAthlete} disabled={isLoading || !schoolAthletes || schoolAthletes.err}>Select Athlete</Button>
+                                        </Flex>
+                                    </Box>
+                                </>
+                            ) : (
+                                <Box my={4}>
+                                    <Text my={2}>Paste athlete url</Text>
+                                    <Input type="text" placeholder="https://www.athletic.net/CrossCountry/Athlete.aspx?AID=13955486" />
+                                </Box>
+                            )}
+                        </Box>
+                    </Box>
+                    <Box bg="yellow" p={2}>
+                        <Heading>Select a race</Heading>
+                        <Box>
+                            <Box my={4}>
+                                <Text my={2}>Paste race url</Text>
+                                <Input type="text" />
+                            </Box>
+                        </Box>
+                    </Box>
+                </Grid>
+            </Box>
+            {/*<Stack my={8} mx={8}>
                 <Heading>Athlete Selection Form</Heading>
                 <Box>
                     <Box>
@@ -131,10 +239,25 @@ function Predict(props) {
                     <Box>
                         <Text>School</Text>
                         <Input placeholder="Paste school athletic.net url" type="text" value={schoolUrl} onChange={(e) => setSchoolUrl(e.target.value)} />
-                        <Button onClick={onSubmitSchool}></Button>
+                        <Button onClick={onSubmitSchool}>Select</Button>
                     </Box>
+                    {
+                        (schoolAthletes && !schoolAthletes.err) && (
+                            <Box>
+                                <Text>
+                                    Select Athlete
+                                </Text>
+                                <Select placeholder="Select athlete" value={athleteId} onChange={(e) => setAthleteId(e.target.value)}>
+                                {
+                                    schoolAthletes.map((ath, index) => (<option key={index} value={ath.athleteId}>{ath.name}</option>))
+                                }
+                                </Select>
+                                <Button onClick={selectSchoolAthlete}>Select Athlete</Button>
+                            </Box>
+                        )
+                    }
                 </Box>
-                {/** // ! Better organization for this and a loading component please */}
+                { // ! Better organization for this and a loading component please }
                 {(!athleteData && isLoading) && (
                     <Heading>Loading...</Heading>
                 )}
@@ -200,7 +323,7 @@ function Predict(props) {
                         <Text>{`Based on how other athletes in the race ran compared to their average time, ${athleteData.athleteName} would run a ${secondsToString(predictionModel.predict(athleteData.averageTime)[1])} at Meet Name`}</Text>
                     </Box>
                     )}
-            </Stack>
+                                </Stack>*/}
         </Box>
     );
 };
