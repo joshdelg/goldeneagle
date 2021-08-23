@@ -2,6 +2,7 @@ import { Box, Heading, Stack, Button, Input, Select, Text, Accordion, AccordionI
 import React, { useState } from "react";
 import { secondsToString, stringToSeconds } from "../lib/timeLibs";
 import regression from 'regression';
+import AthleteCard from "../components/AthleteCard";
 
 function Predict(props) {
 
@@ -108,11 +109,18 @@ function Predict(props) {
         // Request to get athelte list
         setIsLoading(true);
         fetch('/api/getSchoolAthletes', {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
-        }).then(res => res.json()).then(data => setSchoolAthletes(data.athleteList));
+            },
+            body: JSON.stringify({
+                schoolId: schoolUrl.split("SchoolID=")[1],
+                year: year
+            })
+        }).then(res => res.json()).then(data => {
+            setSchoolAthletes(data.athleteList);
+            setAthleteId(data.athleteList[0].athleteId)
+        });
         setIsLoading(false);
     }
 
@@ -203,6 +211,8 @@ function Predict(props) {
                                 </Box>
                             )}
                         </Box>
+                        <Heading>Selected athlete</Heading>
+                        <AthleteCard athleteData={athleteData} />
                     </Box>
                     <Box bg="yellow" p={2}>
                         <Heading>Select a race</Heading>

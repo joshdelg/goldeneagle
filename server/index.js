@@ -176,16 +176,47 @@ app.post("/api/getMeetData", async (req, res) => {
     // ! And whatever else is needed to make the regression line
 });
 
-app.get("/api/getSchoolAthletes", async(req, res) => {
-    const schoolUrl = "https://www.athletic.net/CrossCountry/seasonbest?SchoolID=408&S=2020";
+app.post("/api/getSchoolAthletes", async(req, res) => {
+    const schoolId = req.body.schoolId;
+    const year = req.body.year;
+
+    const schoolUrl = `https://www.athletic.net/CrossCountry/seasonbest?SchoolID=${schoolId}&S=${year}`;
 
     const response = await got(schoolUrl);
     const $ = cheerio.load(response.body);
+
+    let list5k;
     $('div.distance h3').each((i, el) => {
         if($(el).text().includes("5,000 Meters")) {
-            console.log($(el).next().text());
+            list5k = $(el).next();
         }
     });
+
+    if(!list5k) {
+        res.status(500).json({err: "An error occured, please try a different ID or season"});
+        return;
+    }
+
+    let boysList = $('tbody', list5k.children()[0]);
+    let girlsList = $('tbody', list5k.children()[1]);
+
+    let athleteList = [];
+
+    boysList.children().each((i, el) => {
+        const nameEl = $(el).children()[2];
+        const name = $(nameEl).text();
+        const athleteId = $('a', nameEl).attr().href.split('AID=')[1];
+        athleteList.push({name, athleteId});
+    });
+
+    girlsList.children().each((i, el) => {
+        const nameEl = $(el).children()[2];
+        const name = $(nameEl).text();
+        const athleteId = $('a', nameEl).attr().href.split('AID=')[1];
+        athleteList.push({name, athleteId});
+    });
+
+    res.json({athleteList: athleteList});
 });
 
 app.listen(PORT, () => {
