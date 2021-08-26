@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { secondsToString, stringToSeconds } from "../lib/timeLibs";
 import regression from 'regression';
 import AthleteCard from "../components/AthleteCard";
+import RaceCard from "../components/RaceCard";
 
 function Predict(props) {
 
@@ -81,28 +82,6 @@ function Predict(props) {
         });
     }
 
-    const getMeetAnalytics = () => {
-
-        let srs = 0;
-        let avgDropTotal = 0;
-        let avgDropCounter = 0;
-
-        if(meetData) {
-            meetData.meetResults.forEach((result, index) => {
-                if(result.sr) srs += 1;
-
-                if(result.avgTime != null) {
-                    avgDropTotal += (result.SortValue - result.avgTime);
-                    avgDropCounter += 1;
-                }
-            });
-        }
-
-        const avgDrop = avgDropTotal / avgDropCounter;
-
-        return {srs: srs, avgDrop: avgDrop};
-    }
-
     const onSubmitSchool = (e) => {
         e.preventDefault();
 
@@ -159,9 +138,9 @@ function Predict(props) {
     return (
         <Box py="15vh">
             <Heading>Predict an Athlete</Heading>
-            <Box bg="teal" m={4}>
-                <Grid templateColumns="repeat(2, 1fr)" gap={8}>
-                    <Box bg="red" p={2}>
+            <Box m={4}>
+                <Grid templateRows="repeat(2, 1fr)" templateColumns="repeat(2, 1fr)" rowGap={2} gap={8}>
+                    <Box p={2}>
                         <Heading>Select an athlete</Heading>
                         <Box>
                             <Box my={4}>
@@ -211,17 +190,70 @@ function Predict(props) {
                                 </Box>
                             )}
                         </Box>
-                        <Heading>Selected athlete</Heading>
-                        <AthleteCard athleteData={athleteData} />
+
                     </Box>
-                    <Box bg="yellow" p={2}>
+                    <Box p={2}>
                         <Heading>Select a race</Heading>
                         <Box>
                             <Box my={4}>
                                 <Text my={2}>Paste race url</Text>
-                                <Input type="text" />
+                                <Flex>
+                                    <Input type="text" placeholder="https://www.athletic.net/CrossCountry/meet/190207/results/769452" value={meetUrl} onChange={(e) => setMeetUrl(e.target.value)}/>
+                                    <Button mx={2} onClick={onSelectCourse} disabled={isLoading}>Select Race</Button>
+                                </Flex>
                             </Box>
                         </Box>
+                        {
+                            (meetData && meetData.meetResults) && (
+                                <Box height="60%">
+                                    <Accordion allowToggle defaultIndex={0}>
+                                        <AccordionItem>
+                                            <Heading>
+                                                <AccordionButton>
+                                                    <Box flex="1" textAlign="left">Results</Box>
+                                                    <AccordionIcon />
+                                                </AccordionButton>
+                                            </Heading>
+                                            <AccordionPanel padding={4} height="210px" overflowY="scroll">
+                                                {
+                                                    meetData.meetResults.map((result, index) => (
+                                                        <Text key={index}>{`${result.Place}. ${result.FirstName} ${result.LastName} ${result.Result} (${result.SortValue}) (Avg: ${result.avgTime})`}</Text>
+                                                    ))
+                                                }
+                                            </AccordionPanel>
+                                        </AccordionItem>
+                                    </Accordion>
+                                </Box>
+                            )
+                        }
+                    </Box>
+                    <Box p={2}>
+                    {
+                        athleteData && (
+                            athleteData.err ? (
+                                <Heading>{athleteData.err}</Heading>
+                            ) : (
+                                <>
+                                    <Heading>Selected athlete</Heading>
+                                    <AthleteCard athleteData={athleteData} />
+                                </>
+                            )
+                        )
+                    }
+                    </Box>
+                    <Box p={2}>
+                    {
+                        meetData && (
+                            meetData.err ? (
+                                <Heading>Meet err</Heading>
+                            ) : (
+                                <>
+                                    <Heading>Selected race</Heading>
+                                    <RaceCard meetData={meetData} />
+                                </>
+                            )
+                        )
+                    }
                     </Box>
                 </Grid>
             </Box>

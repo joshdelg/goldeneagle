@@ -139,7 +139,9 @@ app.post("/api/getMeetData", async (req, res) => {
 
     let meetData = {
         meetUrl: meetUrl,
-        year: year
+        year: year,
+        meetName: "Hole in the Wall",
+        divName: "Mens 5,000 Meters Varsity Boys team avg under 18:00"
     };
 
     meetData.meetId = meetUrl.match(/meet[/][0-9]+/g)[0].substring(5);
